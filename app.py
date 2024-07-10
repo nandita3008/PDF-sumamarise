@@ -3,6 +3,7 @@ import warnings
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModel, pipeline
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 
 # Suppress the specific FutureWarning
 warnings.filterwarnings("ignore", category=FutureWarning, message="`resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.")
@@ -16,10 +17,11 @@ print("Model and tokenizer loaded successfully.")
 
 print("Loading summarization pipeline...")
 # Load summarization pipeline
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=-1)
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device='cpu')
 print("Summarization pipeline loaded successfully.")
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load sections and embeddings during server startup
 sections_file = 'sectionshug.txt'
@@ -110,7 +112,7 @@ def index():
 def summarize():
     data = request.json
     question = data.get('question', '')
-    top_n = data.get('top_n', 5)
+    top_n = int(data.get('top_n', 5))
     
     print(f"Summarizing for question: {question} with top_n: {top_n}")
     summary = main(question, top_n)

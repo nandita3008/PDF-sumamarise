@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summarization Tool</title>
+</head>
+<body>
+    <h1>Summarization Tool</h1>
+    <form id="summarizeForm">
+        <label for="question">Enter your question:</label><br>
+        <input type="text" id="question" name="question" required><br><br>
+        <label for="top_n">Number of top sections (default is 5):</label><br>
+        <input type="number" id="top_n" name="top_n" value="5" min="1"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <h2>Summary:</h2>
+    <div id="summary"></div>
+
+    <script>
+        document.getElementById('summarizeForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const question = document.getElementById('question').value;
+            const topN = document.getElementById('top_n').value;
+
+            // Prepare the data to be sent in the POST request
+            const data = JSON.stringify({ question: question, top_n: topN });
+
+            // Send the POST request
+            fetch('http://127.0.0.1:5000/summarize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the summary in the HTML
+                document.getElementById('summary').innerText = data.summary;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
