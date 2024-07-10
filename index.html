@@ -4,28 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Summarization Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            overflow: hidden;
+        }
+        .chat-bubbles {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .chat-bubble {
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px 0;
+            max-width: 80%;
+        }
+        .chat-bubble.assistant {
+            background-color: #e0e0e0;
+            align-self: flex-start;
+        }
+        .chat-bubble.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .chat-input-container {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #ccc;
+            background: #fff;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+        }
+        .chat-submit {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .chat-submit:hover {
+            background-color: #0056b3;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007bff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            align-self: center;
+            margin: 10px 0;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Summarization Tool</h1>
-    <form id="summarizeForm">
-        <label for="question">Enter your question:</label><br>
-        <input type="text" id="question" name="question" required><br><br>
-        <label for="top_n">Number of top sections (default is 5):</label><br>
-        <input type="number" id="top_n" name="top_n" value="5" min="1"><br><br>
-        <input type="submit" value="Submit">
-    </form>
-    <h2>Summary:</h2>
-    <div id="summary"></div>
+    <div class="chat-container">
+        <div class="chat-bubbles">
+            <div class="chat-bubble assistant">Please enter your question:</div>
+            <div id="chat">
+                <!-- Chat bubbles will be appended here -->
+            </div>
+        </div>
+        <form id="summarizeForm" class="chat-input-container">
+            <input type="text" id="question" name="question" class="chat-input" required>
+            <input type="submit" value="Send" class="chat-submit">
+        </form>
+    </div>
 
     <script>
         document.getElementById('summarizeForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the default form submission
 
             const question = document.getElementById('question').value;
-            const topN = document.getElementById('top_n').value;
+
+            // Display user question as a chat bubble
+            const userBubble = document.createElement('div');
+            userBubble.className = 'chat-bubble user';
+            userBubble.innerText = question;
+            document.getElementById('chat').appendChild(userBubble);
+
+            // Display loading spinner
+            const loadingSpinner = document.createElement('div');
+            loadingSpinner.className = 'loading-spinner';
+            document.getElementById('chat').appendChild(loadingSpinner);
+
+            // Scroll to the bottom of the chat
+            const chatBubbles = document.querySelector('.chat-bubbles');
+            chatBubbles.scrollTop = chatBubbles.scrollHeight;
 
             // Prepare the data to be sent in the POST request
-            const data = JSON.stringify({ question: question, top_n: topN });
+            const data = JSON.stringify({ question: question, top_n: 5 });
 
             // Send the POST request
             fetch('http://127.0.0.1:5000/summarize', {
@@ -37,12 +138,26 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Display the summary in the HTML
-                document.getElementById('summary').innerText = data.summary;
+                // Remove the loading spinner
+                loadingSpinner.remove();
+
+                // Display the summary as a chat bubble
+                const assistantBubble = document.createElement('div');
+                assistantBubble.className = 'chat-bubble assistant';
+                assistantBubble.innerText = data.summary;
+                document.getElementById('chat').appendChild(assistantBubble);
+
+                // Scroll to the bottom of the chat
+                chatBubbles.scrollTop = chatBubbles.scrollHeight;
             })
             .catch(error => {
                 console.error('Error:', error);
+                // Remove the loading spinner in case of error
+                loadingSpinner.remove();
             });
+
+            // Clear the input field
+            document.getElementById('question').value = '';
         });
     </script>
 </body>
