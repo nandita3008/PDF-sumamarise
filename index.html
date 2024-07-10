@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summarization Tool</title>
+    <title>Question Answering Tool</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,6 +25,7 @@
             flex-direction: column;
             height: 80vh;
             overflow: hidden;
+            position: relative;
         }
         .chat-bubbles {
             flex: 1;
@@ -70,6 +71,14 @@
         .chat-submit:hover {
             background-color: #0056b3;
         }
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         .loading-spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-left-color: #007bff;
@@ -91,6 +100,25 @@
     </style>
 </head>
 <body>
+    <div class="controls">
+        <div>
+            <label for="model">Choose a model:</label>
+            <select id="model" name="model">
+                <option value="hf">Hugging Face</option>
+                <option value="openai">OpenAI</option>
+            </select>
+        </div>
+        <div>
+            <label for="top_n">Number of articles:</label>
+            <select id="top_n" name="top_n">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+    </div>
     <div class="chat-container">
         <div class="chat-bubbles">
             <div class="chat-bubble assistant">Please enter your question:</div>
@@ -98,17 +126,19 @@
                 <!-- Chat bubbles will be appended here -->
             </div>
         </div>
-        <form id="summarizeForm" class="chat-input-container">
+        <form id="questionForm" class="chat-input-container">
             <input type="text" id="question" name="question" class="chat-input" required>
             <input type="submit" value="Send" class="chat-submit">
         </form>
     </div>
 
     <script>
-        document.getElementById('summarizeForm').addEventListener('submit', function(event) {
+        document.getElementById('questionForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the default form submission
 
             const question = document.getElementById('question').value;
+            const modelType = document.getElementById('model').value;
+            const topN = parseInt(document.getElementById('top_n').value);
 
             // Display user question as a chat bubble
             const userBubble = document.createElement('div');
@@ -126,7 +156,7 @@
             chatBubbles.scrollTop = chatBubbles.scrollHeight;
 
             // Prepare the data to be sent in the POST request
-            const data = JSON.stringify({ question: question, top_n: 5 });
+            const data = JSON.stringify({ question: question, model_type: modelType, top_n: topN });
 
             // Send the POST request
             fetch('http://127.0.0.1:5000/summarize', {
@@ -141,7 +171,7 @@
                 // Remove the loading spinner
                 loadingSpinner.remove();
 
-                // Display the summary as a chat bubble
+                // Display the answer as a chat bubble
                 const assistantBubble = document.createElement('div');
                 assistantBubble.className = 'chat-bubble assistant';
                 assistantBubble.innerText = data.summary;
